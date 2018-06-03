@@ -20,8 +20,10 @@
 
         <slf4j.version>1.7.21</slf4j.version>
         <scala-logging-slf4j.version>2.1.2</scala-logging-slf4j.version>
+        <json4s.version>3.3.0</json4s.version>
 
         <scala-test.version>2.2.2</scala-test.version>
+        <junit.version>4.12</junit.version>
     </properties>
 
     <dependencies>
@@ -41,6 +43,12 @@
             <artifactId>spark-csv_2.11</artifactId>
             <version>${spark-csv.version}</version>
         </dependency>
+        <dependency>
+            <groupId>org.apache.spark</groupId>
+            <artifactId>spark-sql_2.11</artifactId>
+            <version>${spark.version}</version>
+            <scope>provided</scope>
+        </dependency>
 
         <!-- Utils -->
         <dependency>
@@ -53,6 +61,17 @@
             <artifactId>scala-logging-slf4j_2.11</artifactId>
             <version>${scala-logging-slf4j.version}</version>
         </dependency>
+        <dependency>
+            <groupId>org.json4s</groupId>
+            <artifactId>json4s-native_2.11</artifactId>
+            <version>${json4s.version}</version>
+        </dependency>
+        <dependency>
+            <groupId>com.univocity</groupId>
+            <artifactId>univocity-parsers</artifactId>
+            <version>2.6.3</version>
+            <type>jar</type>
+        </dependency>
 
         <!-- Tests -->
         <dependency>
@@ -61,11 +80,22 @@
             <version>${scala-test.version}</version>
             <scope>test</scope>
         </dependency>
+        <dependency>
+            <groupId>junit</groupId>
+            <artifactId>junit</artifactId>
+            <version>${junit.version}</version>
+            <scope>test</scope>
+        </dependency>
     </dependencies>
 
     <build>
         <sourceDirectory>src/main/scala</sourceDirectory>
         <testSourceDirectory>src/test/scala</testSourceDirectory>
+        <testResources>
+            <testResource>
+                <directory>src/test/resources</directory>
+            </testResource>
+        </testResources>
         <plugins>
             <plugin>
                 <groupId>org.apache.maven.plugins</groupId>
