@@ -15,10 +15,11 @@ package object csvtrs {
 
   val INPUT_FORMAT = "com.databricks.spark.csv"
 
-  def initSession(appName: String = "SparkApp", options: Option[Map[String, String]] = None): SparkSession =
+  def initSession(appName: String = "SparkApp", master: Option[String] = None, options: Option[Map[String, String]] = None): SparkSession =
     SparkSession.getActiveSession.getOrElse({
-      val session = SparkSession.builder().appName(appName)
-      if (options.isDefined) session.config(new SparkConf().setAll(options.get)).getOrCreate() else session.getOrCreate()
+      val sessionBuilder = SparkSession.builder().appName(appName)
+      if (master.isDefined) sessionBuilder.master(master.get)
+      if (options.isDefined) sessionBuilder.config(new SparkConf().setAll(options.get)).getOrCreate() else sessionBuilder.getOrCreate()
     })
 
   case class CsvTransformConfiguration(dataPath: String, reportPath: String, rules: List[ColumnTransformRule])
@@ -29,18 +30,15 @@ package object csvtrs {
                                   date_expression: Option[String] = None
                            ) {
 
-    val typesMap = Map(
-      "string"   -> StringType,
-      "integer"  -> IntegerType,
-      "date"     -> DateType,
-      "boolean"  -> BooleanType
-    )
+    val typeExpression: Column = new_data_type match {
+      case "string"   => col(existing_col_name) cast StringType
+      case "integer"  => col(existing_col_name) cast IntegerType
+      case "date"     => to_date(unix_timestamp(col(existing_col_name), date_expression.get) cast TimestampType)
+      case "boolean"  => col(existing_col_name) cast BooleanType
+      case _          => throw new Exception("Type casting expression not implemented yet")
+    }
 
-    val columnCast: Column = col(existing_col_name) cast typesMap(new_data_type)
-
-    val expression: Column = {
-      if (date_expression.isDefined) date_format(columnCast, date_expression.get) else columnCast
-    } as new_col_name
+    val expression: Column = typeExpression as new_col_name
   }
 
   def rulesLoader(path: String): List[ColumnTransformRule] = {
