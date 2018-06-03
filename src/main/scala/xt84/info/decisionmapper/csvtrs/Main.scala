@@ -1,4 +1,4 @@
-package xt84.info.decisionmapper.test
+package xt84.info.decisionmapper.csvtrs
 
 object Main extends App {
   val KEYS = Map(
