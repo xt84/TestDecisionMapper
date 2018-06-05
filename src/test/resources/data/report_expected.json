@@ -1,0 +1,1 @@
+[{"Column":"birthday","Unique_values":2,"Values":[{"26-01-1996":1},{"26-01-1995":1}]},{"Column":"age","Unique_values":1,"Values":[{"26":1}]},{"Column":"name","Unique_values":2,"Values":[{"Lisa":1},{"John":1}]}]
