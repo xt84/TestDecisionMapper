@@ -30,15 +30,21 @@ package object csvtrs {
                                   date_expression: Option[String] = None
                            ) {
 
-    val typeExpression: Column = new_data_type match {
-      case "string"   => col(existing_col_name) cast StringType
-      case "integer"  => col(existing_col_name) cast IntegerType
-      case "date"     => to_date(unix_timestamp(col(existing_col_name), date_expression.get) cast TimestampType)
-      case "boolean"  => col(existing_col_name) cast BooleanType
+    val expressionTransformation: Column = new_data_type match {
+      case "string"   => col(existing_col_name) cast StringType as new_col_name
+      case "integer"  => col(existing_col_name) cast IntegerType as new_col_name
+      case "date"     => to_date(unix_timestamp(col(existing_col_name), date_expression.get) cast TimestampType) as new_col_name
+      case "boolean"  => col(existing_col_name) cast BooleanType as new_col_name
       case _          => throw new Exception("Type casting expression not implemented yet")
     }
 
-    val expression: Column = typeExpression as new_col_name
+    val expressionReport: Column = new_data_type match {
+      case "date" => date_format(col(new_col_name), date_expression.get) as existing_col_name
+      case _ => col(new_col_name) as existing_col_name
+    }
+
+    val reportFilterExpression: String = s"$new_col_name IS NOT NULL"
+    val reportColumn: Column = col(new_col_name) as existing_col_name
   }
 
   def rulesLoader(path: String): List[ColumnTransformRule] = {
