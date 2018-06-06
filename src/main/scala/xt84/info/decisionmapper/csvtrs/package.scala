@@ -13,7 +13,26 @@ import org.json4s.native.JsonMethods.parse
 
 package object csvtrs {
 
-  val INPUT_FORMAT = "com.databricks.spark.csv"
+  val DEFAULT_FORMAT = "com.databricks.spark.csv"
+
+  val KEYS = Map(
+    "data"    -> "Path to data",
+    "rules"   -> "Path to transformation rules configuration",
+    "output"  -> "Path to data output",
+    "report"  -> "Path to report file"
+  )
+
+  val CSV_LOAD_OPTIONS = Map(
+    "header"      -> "true",
+    "inferSchema" -> "true",
+    "quote"       -> "\""
+  )
+
+  val CSV_WRITE_OPTIONS = Map(
+    "header"      -> "true",
+    "quote"       -> "\"",
+    "dateFormat"  -> "yyyy-MM-dd"
+  )
 
   def initSession(appName: String = "SparkApp", master: Option[String] = None, options: Option[Map[String, String]] = None): SparkSession =
     SparkSession.getActiveSession.getOrElse({
@@ -22,7 +41,12 @@ package object csvtrs {
       if (options.isDefined) sessionBuilder.config(new SparkConf().setAll(options.get)).getOrCreate() else sessionBuilder.getOrCreate()
     })
 
-  case class CsvTransformConfiguration(dataPath: String, reportPath: String, rules: List[ColumnTransformRule])
+  case class CsvTransformConfiguration(
+                                        dataPath: String,
+                                        reportPath: String,
+                                        outputPath: String,
+                                        rules: List[ColumnTransformRule]
+                                      )
   case class ColumnTransformRule(
                                   existing_col_name: String,
                                   new_col_name: String,

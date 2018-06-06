@@ -3,21 +3,20 @@ package xt84.info.decisionmapper.csvtrs
 import org.apache.spark.sql.{Column, DataFrame, SparkSession}
 import org.apache.spark.sql.functions._
 
-class Processing(val spark: SparkSession) {
+object Processing {
 
-  val CSV_LOAD_OPTIONS = Map(
-    "header" -> "true",
-    "inferSchema" -> "true",
-    "quote" -> "\""
-  )
-
-  def load(path: String, options: Option[Map[String, String]] = None): DataFrame = {
-    val df = spark.read
-      .format(INPUT_FORMAT)
-      .options(options.getOrElse(CSV_LOAD_OPTIONS))
-      .load(path)
-    df.select(clearExpr(df.columns):_*).filter(filterExpr(df.columns))
-  }
+  def load(
+            spark: SparkSession,
+            path: String,
+            rules: List[ColumnTransformRule],
+            options: Option[Map[String, String]] = None
+          ): DataFrame =
+    spark.read
+    .format(DEFAULT_FORMAT)
+    .options(options.getOrElse(CSV_LOAD_OPTIONS))
+    .load(path)
+    .select(clearExpr(rules.map(r => r.existing_col_name)):_*)
+    .filter(filterExpr(rules.map(r => r.existing_col_name)))
 
   def transform(df: DataFrame, rules: List[ColumnTransformRule]): DataFrame = df.select(rules.map(r => r.expressionTransformation):_*)
 

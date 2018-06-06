@@ -1,29 +1,51 @@
 package xt84.info.decisionmapper.csvtrs
 
-object Main extends App {
-  val KEYS = Map(
-    "data"    -> "Path to data",
-    "rules"   -> "Path to transformation rules configuration",
-    "report"  -> "Path to report file"
-  )
+import com.typesafe.scalalogging.slf4j.LazyLogging
+
+import scala.util.{Failure, Success}
+
+object Main extends App with LazyLogging {
 
   override def main(args: Array[String]): Unit = {
     if ((args.length == 0) || ((args.length % KEYS.size) > 0) || (args.length < 3)) {
-      println(usage())
+      println(usage(KEYS))
+      System.exit(1)
     } else {
-      //TODO: job init code
+      val parsed = parseArguments(args.toList)
+      logger.info(
+        s"""
+          |Path to data   -> ${parsed("data")}
+          |Path to rules  -> ${parsed("rules")}
+          |Path to output -> ${parsed("output")}
+          |Path to report -> ${parsed("report")}
+        """.stripMargin
+      )
+      new JobRunner(CsvTransformConfiguration(
+        dataPath = parsed("data"),
+        reportPath = parsed("report"),
+        outputPath = parsed("output"),
+        rules = rulesLoader(parsed("rules"))
+      )).run() match {
+        case Success(_)   => logger.info("Processing finished")
+        case Failure(ex)  => {
+          logger.error("Error when processing data", ex)
+          System.exit(1)
+        }
+      }
     }
   }
 
-  def usage(): String = KEYS.map(kv => kv._1 -> s"--${kv._1} ${kv._2}").values.mkString(" ")
+  def usage(keys: Map[String, String]): String = keys.map(
+    kv => s"--${kv._1} ${kv._2}"
+  ).toList.mkString("\n")
 
-  def parseArguments(argsMap: Map[String, String] = Map(), args: List[String]): Map[String, String] = {
+  def parseArguments(args: List[String], argsMap: Map[String, String] = Map()): Map[String, String] = {
     def isKey(arg: String) = arg.startsWith("--")
     args match {
       case Nil => argsMap
       case arg :: args if isKey(arg) => parseArguments(
-        argsMap ++ Map(arg.replaceAll("--", "") -> args.head),
-        args.tail
+        args.tail,
+        argsMap ++ Map(arg.replaceAll("--", "") -> args.head)
       )
     }
   }
